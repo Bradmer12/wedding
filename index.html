@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wedding Seating</title>
+<style>
+:root{--bg:#faf6ef;--card:#fff;--ink:#2b2622;--mute:#7a6f64;--accent:#9b5d4a;--hi:#f6dfc8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e1a17;--card:#2a2521;--ink:#f3ece3;--mute:#b5a99b;--accent:#e0a48f;--hi:#5a3f30}}
+:root[data-theme="dark"]{--bg:#1e1a17;--card:#2a2521;--ink:#f3ece3;--mute:#b5a99b;--accent:#e0a48f;--hi:#5a3f30}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif;padding:2vmin 3vmin}
+h1{font-weight:400;font-size:clamp(28px,5vw,64px);margin:0;text-align:center;cursor:default;user-select:none}
+.next{margin:2vmin auto;max-width:900px;text-align:center;background:var(--card);border:2px solid var(--accent);border-radius:20px;padding:2vmin 3vmin}
+.next small{display:block;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);font-size:clamp(14px,1.8vw,22px)}
+.next .what{font-size:clamp(28px,5vw,64px);color:var(--accent);margin:.2em 0}
+.next .when{font-size:clamp(20px,3vw,40px)}
+.next .left{color:var(--mute);font-size:clamp(16px,2vw,26px)}
+.search{display:block;margin:2vmin auto;width:min(700px,100%);font:inherit;font-size:clamp(20px,3vw,36px);padding:.5em .8em;border-radius:999px;border:2px solid var(--mute);background:var(--card);color:var(--ink);text-align:center}
+.found{text-align:center;font-size:clamp(22px,3.4vw,44px);margin:1vmin 0}
+.found div{margin:.2em 0}.found b{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2vmin}
+.t{background:var(--card);border-radius:16px;padding:1.6vmin 2vmin;border:2px solid transparent;transition:opacity .2s}
+.t h2{margin:0 0 .4em;font-weight:400;font-size:clamp(20px,2.4vw,32px);color:var(--accent);border-bottom:1px solid var(--mute);padding-bottom:.2em}
+.t ul{margin:0;padding:0;list-style:none;font-size:clamp(16px,1.9vw,26px);line-height:1.5}
+.t.dim{opacity:.25}.t.hit{border-color:var(--accent)}
+mark{background:var(--hi);color:inherit;border-radius:4px;padding:0 .15em;font-weight:700}
+dialog{width:min(800px,94vw);background:var(--card);color:var(--ink);border:2px solid var(--accent);border-radius:16px}
+dialog textarea,dialog input{width:100%;font:16px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--mute);border-radius:8px;padding:8px;margin:4px 0 12px}
+dialog textarea{height:22vh}
+button{font:inherit;font-size:18px;padding:.5em 1.2em;border-radius:999px;border:0;background:var(--accent);color:#fff;margin-right:8px}
+</style>
+</head>
+<body>
+<h1 id="title"></h1>
+<div class="next" id="next"></div>
+<input class="search" id="q" placeholder="Find your name…" autocomplete="off">
+<div class="found" id="found"></div>
+<div class="grid" id="grid"></div>
+
+<dialog id="dlg">
+  <b>Edit board</b> (saved on this device)
+  <label>Title<input id="eTitle"></label>
+  <label>Schedule — one per line: <code>4:00 PM | Ceremony</code><textarea id="eSched"></textarea></label>
+  <label>Tables — one per line: <code>Table 1 | Name, Name, Name</code><textarea id="eTables"></textarea></label>
+  <button id="save">Save</button><button id="reset" style="background:var(--mute)">Reset sample</button><button id="close" style="background:var(--mute)">Close</button>
+</dialog>
+
+<script>
+var DEF={
+title:"Alex & Jamie",
+sched:"4:00 PM | Ceremony\n4:45 PM | Cocktail Hour\n6:00 PM | Dinner Served\n7:30 PM | First Dance\n7:45 PM | Cake Cutting\n8:00 PM | Dancing\n10:30 PM | Last Dance",
+tables:"Table 1 | Alice Smith, Bob Smith, Carol Jones, Dan Jones\nTable 2 | Erin Lee, Frank Lee, Grace Kim, Henry Kim\nTable 3 | Ivy Brown, Jack Brown, Kara White, Leo White"
+};
+var S=load();
+function load(){try{var r=localStorage.getItem("wb");if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(DEF))}
+function store(){try{localStorage.setItem("wb",JSON.stringify(S))}catch(e){}}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function lines(t){return t.split("\n").map(function(l){return l.trim()}).filter(Boolean)}
+function events(){return lines(S.sched).map(function(l){
+  var p=l.split("|"),m=/(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(p[0]);if(!m)return null;
+  var h=+m[1]%12+(m[3].toUpperCase()=="PM"?12:0),d=new Date();d.setHours(h,+m[2],0,0);
+  return{t:d,label:p[0].trim(),name:(p[1]||"").trim()}}).filter(Boolean).sort(function(a,b){return a.t-b.t})}
+function tables(){return lines(S.tables).map(function(l){var p=l.split("|");
+  return{name:p[0].trim(),guests:(p[1]||"").split(",").map(function(g){return g.trim()}).filter(Boolean)}})}
+function fmt(ms){var m=Math.round(ms/60000);if(m<1)return"starting now";var h=Math.floor(m/60);m%=60;
+  return"in "+(h?h+" hr ":"")+(m?m+" min":"")}
+function renderNext(){
+  var now=new Date(),n=events().filter(function(e){return e.t>now})[0],el=document.getElementById("next");
+  el.innerHTML=n?'<small>Coming up next</small><div class="what">'+esc(n.name)+'</div><div class="when">'+esc(n.label)+'</div><div class="left">'+fmt(n-now)+'</div>'
+   :'<small>Thank you for celebrating with us</small><div class="what">♥</div>'}
+function renderGrid(){
+  var q=document.getElementById("q").value.trim().toLowerCase(),T=tables(),f=document.getElementById("found"),out="",hits=[];
+  var html=T.map(function(t){
+    var any=false,li=t.guests.map(function(g){
+      var hit=q&&g.toLowerCase().indexOf(q)>-1;if(hit){any=true;hits.push([g,t.name])}
+      return"<li>"+(hit?"<mark>"+esc(g)+"</mark>":esc(g))+"</li>"}).join("");
+    return'<div class="t'+(q?(any?" hit":" dim"):"")+'"><h2>'+esc(t.name)+"</h2><ul>"+li+"</ul></div>"}).join("");
+  document.getElementById("grid").innerHTML=html;
+  f.innerHTML=q?(hits.length?hits.slice(0,6).map(function(h){return"<div>"+esc(h[0])+" → <b>"+esc(h[1])+"</b></div>"}).join(""):"<div>No match — try a different spelling</div>"):""}
+function renderAll(){document.getElementById("title").textContent=S.title;renderNext();renderGrid()}
+var idle;document.getElementById("q").addEventListener("input",function(){renderGrid();clearTimeout(idle);
+  idle=setTimeout(function(){document.getElementById("q").value="";renderGrid()},60000)});
+setInterval(renderNext,15000);
+// hidden editor: tap title 5 times
+var taps=0,tt;document.getElementById("title").addEventListener("click",function(){
+  taps++;clearTimeout(tt);tt=setTimeout(function(){taps=0},1500);
+  if(taps>=5){taps=0;document.getElementById("eTitle").value=S.title;document.getElementById("eSched").value=S.sched;
+    document.getElementById("eTables").value=S.tables;document.getElementById("dlg").showModal()}});
+document.getElementById("save").onclick=function(){S={title:document.getElementById("eTitle").value,sched:document.getElementById("eSched").value,tables:document.getElementById("eTables").value};store();renderAll();document.getElementById("dlg").close()};
+document.getElementById("reset").onclick=function(){S=JSON.parse(JSON.stringify(DEF));store();renderAll();document.getElementById("dlg").close()};
+document.getElementById("close").onclick=function(){document.getElementById("dlg").close()};
+renderAll();
+</script>
+</body>
+</html>
