@@ -50,7 +50,7 @@ button{font:inherit;font-size:18px;padding:.5em 1.2em;border-radius:999px;border
 var DEF={
 title:"Samantha & Brad",
 sched:"3:00 PM | Doors Open & Cocktail Hour (Garden)\n4:30 PM | Ceremony (Garden)\n5:00 PM | Please Take a Seat\n5:10 PM | Toasts\n5:25 PM | Dinner\n6:15 PM | Fire Pit Lit & S'mores (Garden)\n7:05 PM | Live Music (Loft)\n8:00 PM | Bar Moves Upstairs, Dessert! (Loft)\n10:15 PM | Last Call (Loft)\n10:30 PM | Reception Ends. Head to Neon Clown Dream Lounge!",
-tables:"Table 1 | Brad, Sam, Janis, Charlie, Patricia, Kevin\nTable 2 | Eric, Johanna, Adelaide, Juliet, Clifford, Evelyn, Benjamin, Harrison, Holly R, Jeff\nTable 3 | Allan, David, Hannah M, Ryder, Jean, Mark, Suzanne M, Tasha, Reynard\nTable 4 | Emma, Zach, Estelle, Nick, Nick B, Sue P, Scotty, Sarah, Matt, Annamarie\nTable 5 | Grace, Jack, Ginger, Jason, Abbey, Zach R, Rachel, Veronica, Taikato\nTable 6 | Lawrence, Nancy, Annie, Clark, Dede, Eliot\nTable 7 | Nikki, Kuba, Kelley, Mike, Ashley, Joseph\nTable 8 | Daniel, Connor, Diana, Chelsea, Frank, Laura"
+tables:"Table 1 | Brad, Sam, Janis, Charlie, Patricia, Kevin\nTable 2 | Eric, Johanna, Adelaide, Juliet, Clifford, Evelyn, Benjamin, Harrison, Holly R, Jeff\nTable 3 | Allan, David, Hannah M, Ryder, Jean, Mark, Suzanne M, Tasha, Reynard\nTable 4 | Emma, Zach, Estelle, Nick, Nick B, Sue, Scotty, Sarah, Matt, Annamarie\nTable 5 | Grace, Jack, Ginger, Jason, Abbey, Zach R, Rachel, Veronica, Taikato\nTable 6 | Lawrence, Nancy, Annie, Clark, Dede, Eliot\nTable 7 | Nikki, Kuba, Kelley, Mike, Ashley, Joseph\nTable 8 | Daniel, Connor, Diana, Chelsea, Frank, Laura"
 };
 var S=load();
 function load(){try{var r=localStorage.getItem("wb2");if(r)return JSON.parse(r)}catch(e){}return JSON.parse(JSON.stringify(DEF))}
@@ -67,7 +67,7 @@ function fmt(ms){var m=Math.round(ms/60000);if(m<1)return"starting now";var h=Ma
   return"in "+(h?h+" hr ":"")+(m?m+" min":"")}
 function renderNext(){
   var now=new Date(),n=events().filter(function(e){return e.t>now})[0],el=document.getElementById("next");
-  el.innerHTML=n?'<small>Coming up next</small><div class="what">'+esc(n.name)+'</div><div class="when">'+esc(n.label)+'</div><div class="left">'+fmt(n-now)+'</div>'
+  el.innerHTML=n?'<small>Coming up next</small><div class="what">'+esc(n.name)+'</div><div class="when">'+esc(n.label)+'</div><div class="left">'+fmt(n.t-now)+'</div>'
    :'<small>Thank you for celebrating with us</small><div class="what">♥</div>'}
 function renderGrid(){
   var q=document.getElementById("q").value.trim().toLowerCase(),T=tables(),f=document.getElementById("found"),out="",hits=[];
